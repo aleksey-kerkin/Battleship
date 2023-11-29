@@ -161,6 +161,9 @@ class Board:
     def begin(self):
         self.occupied = []
 
+    def defeat(self):
+        return self.count == len(self.ships)
+
 
 # создание родительского класса игрока
 class Player:
@@ -218,10 +221,12 @@ class User(Player):
             return Dot(x - 1, y - 1)
 
 
-# класс самой игры, запуск, случайная расстановка кораблей на полях для ИИ и для пользователя
+# класс самой игры, случайная расстановка кораблей
+# на полях для ИИ и для пользователя, их размерность и количество
 class Game:
     def __init__(self, size=6):
         self.size = size
+        self.lengths = [3, 2, 2, 1, 1, 1, 1]
         player = self.random_board()
         computer = self.random_board()
         computer.hid = True
@@ -235,17 +240,17 @@ class Game:
             board = self.random_place()
         return board
 
-    # метод для случайной расстановки кораблей, их количество и размерность
+    # метод для случайной расстановки кораблей
     def random_place(self):
-        lengths = [3, 2, 2, 1, 1, 1, 1]
+
         board = Board(size=self.size)
         attempts = 0
-        for l in lengths:
+        for length in self.lengths:
             while True:
                 attempts += 1
                 if attempts > 2000:
                     return None
-                ship = Ship(Dot(randint(0, self.size), randint(0, self.size)), l, randint(0, 1))
+                ship = Ship(Dot(randint(0, self.size), randint(0, self.size)), length, randint(0, 1))
                 try:
                     board.add_ship(ship)
                     break
@@ -267,19 +272,22 @@ class Game:
               "│     y - номер строки    │"
               )
 
+    def print_boards(self):
+        print(" ───────────────────────── \n"
+              "│    Доска пользователя:  │\n"
+              " ───────────────────────── ")
+        print(self.user.board)
+        print(" ───────────────────────── \n"
+              "│    Доска компьютера:    │\n"
+              " ───────────────────────── ")
+        print(self.ai.board)
+        print(" ───────────────────────── \n")
+
     # запуск цикла игры, очередность ходов и определение победителя
     def loop(self):
         num = 0
         while True:
-            print(" ───────────────────────── \n"
-                  "│    Доска пользователя:  │\n"
-                  " ───────────────────────── ")
-            print(self.user.board)
-            print(" ───────────────────────── \n"
-                  "│    Доска компьютера:    │\n"
-                  " ───────────────────────── ")
-            print(self.ai.board)
-            print(" ───────────────────────── \n")
+            self.print_boards()
             if num % 2 == 0:
                 print(" ───────────────────────── \n"
                       "│   Ходит пользователь.   │")
@@ -292,17 +300,17 @@ class Game:
             if repeat:
                 num -= 1
 
-            if self.ai.board.count == len(self.ai.board.ships):
+            if self.ai.board.defeat():
                 print(" ───────────────────────── \n")
-                print(self.ai.board)
+                self.print_boards()
                 print(" ───────────────────────── \n"
                       "│  Пользователь выиграл!  │\n"
                       " ───────────────────────── \n")
                 break
 
-            if self.user.board.count == len(self.user.board.ships):
+            if self.user.board.defeat():
                 print(" ───────────────────────── \n")
-                print(self.user.board)
+                self.print_boards()
                 print(" ───────────────────────── \n")
                 print(" ───────────────────────── \n"
                       "│    Компьютер выиграл!   │\n"
